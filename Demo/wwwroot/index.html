@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Task Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e4e6eb;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccd0d5;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-add {
+            background-color: #007bff;
+            color: white;
+        }
+
+            .btn-add:hover {
+                background-color: #0056b3;
+            }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+            .btn-edit:hover {
+                background-color: #e0a800;
+            }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+            .btn-delete:hover {
+                background-color: #bd2130;
+            }
+
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e4e6eb;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #65676b;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-mode input {
+            width: 80%;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h1>Task Management Control Center</h1>
+
+        <!-- CREATE Action -->
+        <div class="input-group">
+            <input type="text" id="newTaskTitle" placeholder="Enter a brand new operational task...">
+            <button class="btn-add" onclick="createTask()">+ Add Task</button>
+        </div>
+
+        <!-- READ, UPDATE, DELETE Visual Container -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%">ID</th>
+                    <th style="width: 70%">Task Title</th>
+                    <th style="width: 20%">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="taskTableBody">
+                <!-- JavaScript handles population here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        //const apiPath = '/weatherforecast';
+        const apiPath = '/api/products';
+
+        //// 1. READ Functionality
+        //async function fetchAndRenderTasks() {
+        //    const response = await fetch(`${apiPath}/tasks`, { method: 'get' });
+        //    const tasks = await response.json();
+        //    const tbody = document.getElementById('taskTableBody');
+        //    tbody.innerHTML = '';
+
+        //    tasks.forEach(task => {
+        //        const row = document.createElement('tr');
+        //        row.id = `row-${task.id}`;
+        //        row.innerHTML = `
+        //                <td><strong>#${task.id}</strong></td>
+        //                <td id="title-text-${task.id}">${task.title}</td>
+        //                <td class="actions">
+        //                    <button class="btn-edit" id="btn-edit-${task.id}" onclick="showInlineEditForm(${task.id}, '${task.title}')">Modify</button>
+        //                    <button class="btn-delete" onclick="deleteTask(${task.id})">Remove</button>
+        //                </td>
+        //            `;
+        //        tbody.appendChild(row);
+        //    });
+        //}
+
+        //// 2. CREATE Functionality
+        //async function createTask() {
+        //    const input = document.getElementById('newTaskTitle');
+        //    const value = input.value.trim();
+        //    if (!value) return alert('Task description cannot be empty.');
+
+        //    await fetch(`${apiPath}/add-task?title=${encodeURIComponent(value)}`, { method: 'POST' });
+        //    input.value = '';
+        //    fetchAndRenderTasks();
+        //}
+
+        //// 3. Setup Inline Form for UPDATE
+        //function showInlineEditForm(id, currentTitle) {
+        //    const titleTd = document.getElementById(`title-text-${id}`);
+        //    const actionTd = document.getElementById(`btn-edit-${id}`).parentElement;
+
+        //    // Swap text with an input field
+        //    titleTd.innerHTML = `<input type="text" id="edit-input-${id}" value="${currentTitle}">`;
+
+        //    // Swap Edit button with a Save/Cancel choice
+        //    actionTd.innerHTML = `
+        //            <button class="btn-save" onclick="submitUpdatedTask(${id})">Save</button>
+        //            <button style="background:#6c757d; color:white;" onclick="fetchAndRenderTasks()">Cancel</button>
+        //        `;
+        //}
+
+        //// 3. UPDATE Functionality
+        //async function submitUpdatedTask(id) {
+        //    const updatedValue = document.getElementById(`edit-input-${id}`).value.trim();
+        //    if (!updatedValue) return alert('Updated task cannot be blank.');
+
+        //    await fetch(`${apiPath}/update-task/${id}?abcTitle=${encodeURIComponent(updatedValue)}`, { method: 'PUT' });
+        //    fetchAndRenderTasks();
+        //}
+
+        //// 4. DELETE Functionality
+        //async function deleteTask(id) {
+        //    if (!confirm('Are you sure you want to scrub this task from the API registry?')) return;
+
+        //    const response = await fetch(`${apiPath}/delete-task/${id}`, { method: 'DELETE' });
+        //    const data = await response.json();
+        //    alert(data.message);
+        //    fetchAndRenderTasks();
+        //}
+
+        //// Initialization
+        //fetchAndRenderTasks();
+
+        // 🔑 Secure Session Keys
+        const token = localStorage.getItem('jwtToken');
+        const currentRole = localStorage.getItem('userRole');
+        const currentUsername = localStorage.getItem('username');
+
+        // 🛡️ Route Protection Guard
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // 🌐 Industry-Standard JWT Passport Injector
+        function getAuthHeaders() {
+            return {
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // 👤 Show Logged-in Username
+        if (currentUsername && currentRole) {
+            document.getElementById('userDisplay').textContent = `${currentUsername} (${currentRole})`;
+        }
+
+        // ⛔ Hide Input Group completely if standard User
+        if (currentRole !== 'Admin') {
+            document.getElementById('adminInputGroup').style.display = 'none';
+        }
+
+        // 1. READ (Get Tasks with JWT)
+        async function fetchAndRenderTasks() {
+            try {
+                const response = await fetch(`${apiPath}/tasks`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.status === 401) {
+                    alert('Session expired. Please log in again.');
+                    return logout();
+                }
+
+                if (!response.ok) throw new Error('Network error.');
+
+                const tasks = await response.json();
+                const tbody = document.getElementById('taskTableBody');
+                tbody.innerHTML = '';
+
+                tasks.forEach(task => {
+                    const row = document.createElement('tr');
+                    row.id = `row-${task.id}`;
+
+                    // 🔒 Render Admin Actions only if role matches
+                    const actionButtons = currentRole === 'Admin' ? `
+                <button class="btn-edit" id="btn-edit-${task.id}" onclick="showInlineEditForm(${task.id})">Modify</button>
+                <button class="btn-delete" onclick="deleteTask(${task.id})">Remove</button>
+            ` : `<span style="color:#888; font-size:13px;">View Only</span>`;
+
+                    row.innerHTML = `
+                <td><strong>#${task.id}</strong></td>
+                <td id="title-text-${task.id}">${task.title}</td>
+                <td class="actions">${actionButtons}</td>
+            `;
+                    tbody.appendChild(row);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // 2. CREATE (Add Task with JWT)
+        async function createTask() {
+            const input = document.getElementById('newTaskTitle');
+            const value = input.value.trim();
+            if (!value) return alert('Task description cannot be empty.');
+
+            const response = await fetch(`${apiPath}/add-task?title=${encodeURIComponent(value)}`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                input.value = '';
+                fetchAndRenderTasks();
+            } else {
+                alert('Action Denied: Unauthorized access.');
+            }
+        }
+
+        // 3. EDIT (Setup Inline Input Layout)
+        function showInlineEditForm(id) {
+            const titleTd = document.getElementById(`title-text-${id}`);
+            const actionTd = document.getElementById(`btn-edit-${id}`).parentElement;
+            const currentTitle = titleTd.textContent;
+
+            titleTd.innerHTML = `<input type="text" id="edit-input-${id}" value="${currentTitle.replace(/"/g, '&quot;')}">`;
+            actionTd.innerHTML = `
+        <button class="btn-save" onclick="submitUpdatedTask(${id})">Save</button>
+        <button style="background:#6c757d; color:white;" onclick="fetchAndRenderTasks()">Cancel</button>
+    `;
+        }
+
+        // 3. UPDATE (Submit Modified Task with JWT)
+        async function submitUpdatedTask(id) {
+            const updatedValue = document.getElementById(`edit-input-${id}`).value.trim();
+            if (!updatedValue) return alert('Updated task cannot be blank.');
+
+            const response = await fetch(`${apiPath}/update-task/${id}?abcTitle=${encodeURIComponent(updatedValue)}`, {
+                method: 'PUT',
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                fetchAndRenderTasks();
+            } else {
+                alert('Action Denied: Unauthorized access.');
+                fetchAndRenderTasks();
+            }
+        }
+
+        // 4. DELETE (Remove Task with JWT)
+        async function deleteTask(id) {
+            if (!confirm('Scrub this task from the API registry?')) return;
+
+            const response = await fetch(`${apiPath}/delete-task/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                fetchAndRenderTasks();
+            } else {
+                alert('Action Denied: Unauthorized access.');
+            }
+        }
+
+        // 🚪 Logout Session Cleanup
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        // Execute initial load on startup
+        fetchAndRenderTasks();
+    </script>
+</body>
+</html>

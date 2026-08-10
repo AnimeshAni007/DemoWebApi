@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Task Control - Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 360px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #1a1a1a;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #4b4b4b;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd0d5;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+            input:focus {
+                outline: none;
+                border-color: #007bff;
+                box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+            }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+            button:hover {
+                background: #0056b3;
+            }
+
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>System Login</h2>
+
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="e.g., admin or user">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password123">
+        </div>
+
+        <button onclick="handleLogin()">Sign In</button>
+        <div id="errorMessage" class="error">Invalid username or password.</div>
+    </div>
+
+    <script>async function handleLogin() {
+            const userField = document.getElementById('username');
+            const passField = document.getElementById('password');
+            const errDiv = document.getElementById('errorMessage');
+
+            const username = userField.value.trim();
+            const password = passField.value.trim();
+
+            if (!username || !password) {
+                errDiv.textContent = "Please fill in all fields.";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            // Hide previous errors during submission
+            errDiv.style.display = 'none';
+
+            try {
+                // Call your JWT Auth Controller endpoint
+                const url = `/api/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+                const response = await fetch(url, { method: 'POST' });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // INDUSTRY STANDARD: Save token context safely in local state storage
+                    localStorage.setItem('jwtToken', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('userRole', data.role);
+
+                    // Secure redirect to your main product task dashboard page
+                    window.location.href = '/index.html';
+                } else {
+                    errDiv.textContent = "Invalid username or password.";
+                    errDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errDiv.textContent = "Server connection lost. Try again later.";
+                errDiv.style.display = 'block';
+            }
+        }
+
+        // Allow pressing 'Enter' key to trigger form submission automatically
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });</script>
+</body>
+</html>
