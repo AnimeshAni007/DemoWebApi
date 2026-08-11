@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Task Control - Login</title>
+    <title>Enterprise Task Control - Authentication</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -88,33 +88,90 @@
             border-radius: 6px;
             border: 1px solid #f5c6cb;
         }
+
+        /* Styling for the Toggle Link */
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #65676b;
+        }
+
+            .toggle-link span {
+                color: #007bff;
+                cursor: pointer;
+                font-weight: 600;
+            }
+
+                .toggle-link span:hover {
+                    text-decoration: underline;
+                }
     </style>
 </head>
 <body>
     <div class="login-card">
-        <h2>System Login</h2>
+        <!-- Dynamic header changes between "System Login" and "Create Account" -->
+        <h2 id="formTitle">System Login</h2>
 
         <div class="form-group">
             <label for="username">Username</label>
-            <input type="text" id="username" placeholder="e.g., admin or user">
+            <input type="text" id="username" placeholder="e.g., john_doe">
         </div>
 
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter password123">
+            <input type="password" id="password" placeholder="Enter password">
         </div>
 
-        <button onclick="handleLogin()">Sign In</button>
-        <div id="errorMessage" class="error">Invalid username or password.</div>
+        <!-- Single button that runs different code based on the mode -->
+        <button id="submitBtn" onclick="handleSubmit()">Sign In</button>
+        <div id="errorMessage" class="error"></div>
+
+        <!-- Navigation link to flip modes -->
+        <div class="toggle-link" id="toggleWrapper">
+            Don't have an account? <span onclick="toggleMode(true)">Sign Up</span>
+        </div>
     </div>
 
-    <script>async function handleLogin() {
-            const userField = document.getElementById('username');
-            const passField = document.getElementById('password');
+    <script>
+        let isSignUpMode = false; // False = Login mode, True = Registration mode
+        const apiPath = '/api/auth';
+
+        // Flips the UI text between Login and Registration layouts
+        function toggleMode(signUp) {
+            isSignUpMode = signUp;
+            const formTitle = document.getElementById('formTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            const toggleWrapper = document.getElementById('toggleWrapper');
             const errDiv = document.getElementById('errorMessage');
 
-            const username = userField.value.trim();
-            const password = passField.value.trim();
+            errDiv.style.display = 'none'; // Clear any old errors
+
+            if (isSignUpMode) {
+                formTitle.textContent = "Create Account";
+                submitBtn.textContent = "Register Account";
+                toggleWrapper.innerHTML = `Already have an account? <span onclick="toggleMode(false)">Sign In</span>`;
+            } else {
+                formTitle.textContent = "System Login";
+                submitBtn.textContent = "Sign In";
+                toggleWrapper.innerHTML = `Don't have an account? <span onclick="toggleMode(true)">Sign Up</span>`;
+            }
+        }
+
+        // Directs the button click to the correct function
+        function handleSubmit() {
+            if (isSignUpMode) {
+                handleSignUp();
+            } else {
+                handleLogin();
+            }
+        }
+
+        // 🔐 Handles login request
+        async function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errDiv = document.getElementById('errorMessage');
 
             if (!username || !password) {
                 errDiv.textContent = "Please fill in all fields.";
@@ -122,23 +179,15 @@
                 return;
             }
 
-            // Hide previous errors during submission
-            errDiv.style.display = 'none';
-
             try {
-                // Call your JWT Auth Controller endpoint
-                const url = `/api/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+                const url = `${apiPath}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
                 const response = await fetch(url, { method: 'POST' });
 
                 if (response.ok) {
                     const data = await response.json();
-
-                    // INDUSTRY STANDARD: Save token context safely in local state storage
                     localStorage.setItem('jwtToken', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('userRole', data.role);
-
-                    // Secure redirect to your main product task dashboard page
                     window.location.href = '/index.html';
                 } else {
                     errDiv.textContent = "Invalid username or password.";
@@ -151,11 +200,44 @@
             }
         }
 
-        // Allow pressing 'Enter' key to trigger form submission automatically
+        // 📡 Handles sending the sign-up credentials to the server
+        async function handleSignUp() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errDiv = document.getElementById('errorMessage');
+
+            if (!username || !password) {
+                errDiv.textContent = "Please choose a username and password.";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Sends username and password, with role automatically hardcoded to 'User'
+                const url = `${apiPath}/register?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&role=User`;
+                const response = await fetch(url, { method: 'POST' });
+
+                if (response.ok) {
+                    alert('Registration successful! You can now log in.');
+                    toggleMode(false); // Return to the standard login screen automatically
+                } else {
+                    const errorText = await response.text();
+                    errDiv.textContent = errorText || "Registration failed. Username might be taken.";
+                    errDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                errDiv.textContent = "Server connection lost. Try again later.";
+                errDiv.style.display = 'block';
+            }
+        }
+
+        // Submits form automatically when user presses Enter key
         document.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                handleLogin();
+                handleSubmit();
             }
-        });</script>
+        });
+    </script>
 </body>
 </html>

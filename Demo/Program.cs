@@ -61,5 +61,23 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+
+    // Ensure the physical database engine is created and migrated up to date
+    context.Database.EnsureCreated();
+
+    // Check and seed users cleanly without touching controller lifecycle hooks
+    if (!context.Users.Any())
+    {
+        context.Users.AddRange(
+            new UserItem { Username = "admin", Password = "password123", Role = "Admin" },
+            new UserItem { Username = "user", Password = "password123", Role = "User" }
+        );
+        context.SaveChanges();
+    }
+}
 
 app.Run();

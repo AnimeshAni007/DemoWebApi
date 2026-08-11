@@ -18,7 +18,7 @@ namespace Demo.Controllers
         {
             _context = context;
             _config = config;
-            SeedInitialUsers();
+            //SeedInitialUsers();
         }
 
         [HttpPost("login")]
@@ -50,6 +50,32 @@ namespace Demo.Controllers
 
             return Ok(new { token = tokenString, username = user.Username, role = user.Role });
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromQuery] string username, [FromQuery] string password, [FromQuery] string role = "User")
+        {
+            // 1. Check if the username is already taken
+            var userExists = await _context.Users.AnyAsync(u => u.Username == username);
+            if (userExists)
+            {
+                return BadRequest("Username is already taken.");
+            }
+
+            // 2. Create the new user object (Hardcoded to 'User' role by default from the query string)
+            var newUser = new UserItem
+            {
+                Username = username,
+                Password = password, // Note: In production, you should hash this password!
+                Role = role
+            };
+
+            // 3. Save the new user to your SQL database
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User registered successfully." });
+        }
+
 
         private void SeedInitialUsers()
         {

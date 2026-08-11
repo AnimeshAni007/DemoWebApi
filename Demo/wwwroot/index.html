@@ -117,15 +117,40 @@
             width: 80%;
             padding: 6px;
         }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e4e6eb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .btn-logout {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
 
     <div class="dashboard">
-        <h1>Task Management Control Center</h1>
+        <!--<h1>Task Management Control Center</h1>-->
+        <div class="header-container">
+            <h1>Task Management Control Center</h1>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <!-- User Badge Container -->
+                <div id="userDisplay">Loading profile...</div>
+                <!-- Actionable Logout Button -->
+                <button onclick="logout()" style="background-color: #6c757d; padding: 6px 12px; font-size: 13px; margin: 0;">Logout</button>
+            </div>
+        </div>
 
         <!-- CREATE Action -->
-        <div class="input-group">
+        <div class="input-group" id="adminInputGroup">
             <input type="text" id="newTaskTitle" placeholder="Enter a brand new operational task...">
             <button class="btn-add" onclick="createTask()">+ Add Task</button>
         </div>
@@ -136,7 +161,7 @@
                 <tr>
                     <th style="width: 10%">ID</th>
                     <th style="width: 70%">Task Title</th>
-                    <th style="width: 20%">Actions</th>
+                    <th style="width: 20%" id="actionsHeader">Actions</th>
                 </tr>
             </thead>
             <tbody id="taskTableBody">
@@ -244,6 +269,7 @@
         // ⛔ Hide Input Group completely if standard User
         if (currentRole !== 'Admin') {
             document.getElementById('adminInputGroup').style.display = 'none';
+            document.getElementById('actionsHeader').style.display = 'none';
         }
 
         // 1. READ (Get Tasks with JWT)
@@ -270,16 +296,22 @@
                     row.id = `row-${task.id}`;
 
                     // 🔒 Render Admin Actions only if role matches
-                    const actionButtons = currentRole === 'Admin' ? `
-                <button class="btn-edit" id="btn-edit-${task.id}" onclick="showInlineEditForm(${task.id})">Modify</button>
-                <button class="btn-delete" onclick="deleteTask(${task.id})">Remove</button>
-            ` : `<span style="color:#888; font-size:13px;">View Only</span>`;
-
-                    row.innerHTML = `
-                <td><strong>#${task.id}</strong></td>
-                <td id="title-text-${task.id}">${task.title}</td>
-                <td class="actions">${actionButtons}</td>
-            `;
+                    if (currentRole === 'Admin') {
+                        row.innerHTML = `
+                        <td><strong>#${task.id}</strong></td>
+                        <td id="title-text-${task.id}">${task.title}</td>
+                        <td class="actions">
+                            <button class="btn-edit" id="btn-edit-${task.id}" onclick="showInlineEditForm(${task.id})">Modify</button>
+                            <button class="btn-delete" onclick="deleteTask(${task.id})">Remove</button>
+                        </td>
+                    `;
+                    } else {
+                        // 🔍 Standard user gets a clean view with NO Actions column cells generated at all
+                        row.innerHTML = `
+                        <td><strong>#${task.id}</strong></td>
+                        <td id="title-text-${task.id}">${task.title}</td>
+        `;
+                    }
                     tbody.appendChild(row);
                 });
             } catch (err) { console.error(err); }
